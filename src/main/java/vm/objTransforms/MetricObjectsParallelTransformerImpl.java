@@ -18,7 +18,7 @@ import vm.metricSpace.MetricSpacesStorageInterface.OBJECT_TYPE;
  */
 public class MetricObjectsParallelTransformerImpl {
 
-    public static final Integer PARALLELISATION = 16;
+    public static final Integer PARALLELISATION = 16; //todo why would this be a hard set constant?!
     public static final Integer BATCH_SIZE = 100000;
     private static final Logger LOG = Logger.getLogger(MetricObjectsParallelTransformerImpl.class.getName());
 

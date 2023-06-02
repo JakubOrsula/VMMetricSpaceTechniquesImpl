@@ -53,7 +53,8 @@ public class LearnSketchingGHP {
             throw new IllegalArgumentException("Set balanced from range (0, 1).");
         }
         DistanceFunctionInterface<Object> df = metricSpace.getDistanceFunctionForDataset(datasetName);
-        List<Object> sampleOfDataset = metricSpaceStorage.getSampleOfDataset(datasetName, sampleSetSize);
+        //todo you dont need this, you can fake the distance instead
+        List<Object> sampleOfDataset = additionalInfoForDistF.length >= 4 ? (List<Object>) additionalInfoForDistF[3] : metricSpaceStorage.getSampleOfDataset(datasetName, sampleSetSize); //todo Takyto hardcoding neumoznuje zratat sketche pre lubovolne proteiny
         List<Object> pivots = metricSpaceStorage.getPivots(pivotSetName, numberOfPivotsForMakingAllPairs);
 
         AbstractObjectToSketchTransformator sketchingTechnique = new SketchingGHP(df, metricSpace, pivots, true, additionalInfoForDistF);
