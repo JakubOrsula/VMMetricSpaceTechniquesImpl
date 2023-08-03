@@ -25,9 +25,7 @@ import vm.metricSpace.distance.bounding.nopivot.storeLearned.SecondaryFilteringW
  */
 public class LearningSecondaryFilteringWithSketches<T> {
 
-////    public static final float[] THRESHOLDS_P_CUM = new float[]{0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.65f, 0.7f, 0.75f, 0.8f, 0.85f, 0.9f};
-//    public static final float[] THRESHOLDS_P_CUM = new float[]{0.91f, 0.92f, 0.93f, 0.94f, 0.95f, 0.96f, 0.97f, 0.98f, 0.99f, 1};
-    public static final float[] THRESHOLDS_P_CUM = new float[]{0.95f};
+    public static final float[] THRESHOLDS_P_CUM = new float[]{0.6f, 0.65f, 0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f};
     public static final Logger LOG = Logger.getLogger(LearningSecondaryFilteringWithSketches.class.getName());
 
     private final SecondaryFilteringWithSketchesStoreInterface storage;
@@ -80,6 +78,7 @@ public class LearningSecondaryFilteringWithSketches<T> {
         }
         List<Object> sketches = sketchesDataset.getSampleOfDataset(SKETCHES_SAMPLE_COUNT_FOR_IDIM_PX);
         int numberOfDists = DISTS_COMPS_FOR_SK_IDIM_AND_PX;
+        LOG.log(Level.INFO,"number of dists: " + numberOfDists);
         if (sketches.size() <= 300000) {
             numberOfDists = sketches.size() * 10;
         }
@@ -101,7 +100,7 @@ public class LearningSecondaryFilteringWithSketches<T> {
             float distance = hammingDF.getDistance(sk1Data, sk2Data);
             distances[i] = distance;
             i++;
-            if (i % (DISTS_COMPS_FOR_SK_IDIM_AND_PX / 10) == 0) {
+            if (i % 10 == 0) {
                 LOG.log(Level.INFO, "iDim evaluation: {0} distances", i);
             }
         }
