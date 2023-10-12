@@ -63,8 +63,8 @@ public class TransformDataToGHPSketches {
             Iterator pivotsIt = dataset.getPivots(-1).iterator();
             Iterator queriesIt = dataset.getMetricQueryObjects().iterator();
             Iterator dataIt = dataset.getMetricObjectsFromDataset();
-            parallelTransformer.processIteratorSequentially(pivotsIt, AbstractMetricSpacesStorage.OBJECT_TYPE.PIVOT_OBJECT, params);
-            parallelTransformer.processIteratorSequentially(queriesIt, AbstractMetricSpacesStorage.OBJECT_TYPE.QUERY_OBJECT, params);
+//            parallelTransformer.processIteratorSequentially(pivotsIt, AbstractMetricSpacesStorage.OBJECT_TYPE.PIVOT_OBJECT, params);
+//            parallelTransformer.processIteratorSequentially(queriesIt, AbstractMetricSpacesStorage.OBJECT_TYPE.QUERY_OBJECT, params);
             parallelTransformer.processIteratorInParallel(dataIt, AbstractMetricSpacesStorage.OBJECT_TYPE.DATASET_OBJECT, vm.javatools.Tools.PARALELISATION, params);
         }
         return sketchingTechnique;
