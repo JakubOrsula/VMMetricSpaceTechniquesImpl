@@ -25,12 +25,21 @@ public class CheckingOfNearestNeighbours {
         groundTruthForDataset = resultsStorage.getGroundTruthForDataset(groundTruthDatasetName, groundTruthQuerySetName);
     }
 
+    /**
+     * 
+     * @param queryID
+     * @param groundTruthNNCount
+     * @return k true nearest neighbours
+     */
     public Set<String> getIDsOfNNForQuery(String queryID, int groundTruthNNCount) {
         if (!groundTruthForDataset.containsKey(queryID)) {
             LOG.log(Level.SEVERE, "Query object {0} not evaluated in the ground truth", queryID);
             return null;
         }
         Set<String> ret = RecallOfCandsSetsEvaluator.getFirstIDs(queryID, groundTruthForDataset.get(queryID), groundTruthNNCount);
+        for (String string : ret) {
+            System.out.println(string);
+        }
         return ret;
     }
 }

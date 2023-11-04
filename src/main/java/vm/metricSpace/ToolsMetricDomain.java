@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vm.math.Tools;
 import vm.metricSpace.distance.DistanceFunctionInterface;
+import vm.metricSpace.distance.storedPrecomputedDistances.MainMemoryStoredPrecomputedDistances;
 
 /**
  *
@@ -207,7 +208,7 @@ public class ToolsMetricDomain {
      * @param distsToPivotsStorage
      * @return ids of the closest pivots
      */
-    public static Object[] getPivotIDsPermutation(DistanceFunctionInterface df, Map<Object, Object> pivotsMap, Object referentData, int prefixLength, Map<Object, Float> distsToPivotsStorage) {
+    public static Object[] getPivotIDsPermutation(DistanceFunctionInterface df, Map pivotsMap, Object referentData, int prefixLength, Map<Object, Float> distsToPivotsStorage) {
         if (prefixLength < 0) {
             prefixLength = Integer.MAX_VALUE;
         }
@@ -232,6 +233,107 @@ public class ToolsMetricDomain {
             Float dist = df.getDistance(referentData, pivot.getValue());
             Map.Entry<Object, Float> entry = new AbstractMap.SimpleEntry<>(pivot.getKey(), dist);
             ret.add(entry);
+        }
+        return ret;
+    }
+
+    public static List<Object> getPrefixesOfVectors(AbstractMetricSpace metricSpace, List<Object> vectors, int finalDimensions) {
+        List<Object> ret = new ArrayList<>();
+        for (Object obj : vectors) {
+            Object oData = metricSpace.getDataOfMetricObject(obj);
+            Object oID = metricSpace.getIDOfMetricObject(obj);
+            Object vec = null;
+            if (oData instanceof float[]) {
+                vec = new float[finalDimensions];
+            } else if (oData instanceof double[]) {
+                vec = new double[finalDimensions];
+            }
+            System.arraycopy(oData, 0, vec, 0, finalDimensions);
+            ret.add(new AbstractMap.SimpleEntry<>(oID, vec));
+        }
+        return ret;
+    }
+
+    public static MainMemoryStoredPrecomputedDistances evaluateMatrixOfDistances(Iterator metricObjectsFromDataset, List pivots, AbstractMetricSpace metricSpace, DistanceFunctionInterface df) {
+        List<float[]> dists = new ArrayList<>();
+        Map<String, Integer> columnHeaders = new HashMap<>();
+        Map<String, Integer> rowHeaders = new HashMap<>();
+        for (int i = 0; i < pivots.size(); i++) {
+            Object p = pivots.get(i);
+            Object pID = metricSpace.getIDOfMetricObject(p);
+            columnHeaders.put(pID.toString(), i);
+        }
+        int rowCounter;
+        for (rowCounter = 0; metricObjectsFromDataset.hasNext(); rowCounter++) {
+            Object o = metricObjectsFromDataset.next();
+            Object oID = metricSpace.getIDOfMetricObject(o);
+            Object oData = metricSpace.getDataOfMetricObject(o);
+            rowHeaders.put(oID.toString(), rowCounter);
+            float[] row = new float[pivots.size()];
+            for (int i = 0; i < pivots.size(); i++) {
+                Object p = pivots.get(i);
+                Object pData = metricSpace.getDataOfMetricObject(p);
+                row[i] = df.getDistance(oData, pData);
+            }
+            dists.add(row);
+            if (rowCounter % 50000 == 0) {
+                LOG.log(Level.INFO, "Evaluated dists between {0} o and {1} pivots", new Object[]{rowCounter, pivots.size()});
+            }
+        }
+        float[][] ret = new float[dists.size()][pivots.size()];
+        ret = dists.toArray(ret);
+        MainMemoryStoredPrecomputedDistances pd = new MainMemoryStoredPrecomputedDistances(ret, columnHeaders, rowHeaders);
+        return pd;
+    }
+
+    public static Map<Object, Float> getVectorsLength(List batch, AbstractMetricSpace metricSpace) {
+        Map<Object, Float> ret = new HashMap<>();
+        for (Object object : batch) {
+            Object id = metricSpace.getIDOfMetricObject(object);
+            float length = 0;
+            float[] vector = (float[]) metricSpace.getDataOfMetricObject(object); // must be the space of floats
+            for (int i = 0; i < vector.length; i++) {
+                float f = vector[i];
+                length += f * f;
+            }
+            ret.put(id, length);
+        }
+        return ret;
+    }
+
+    public static final float[] getPairwiseDistsOfFourObjects(DistanceFunctionInterface df, boolean enforceEFgeqBD, Object... fourObjects) {
+        if (fourObjects.length < 4) {
+            throw new IllegalArgumentException("At least four objects must be provided");
+        }
+        float[] ret = new float[6];
+        ret[4] = df.getDistance(fourObjects[0], fourObjects[2]);
+        ret[5] = df.getDistance(fourObjects[1], fourObjects[3]);
+        for (int i = 0; i < 6; i++) {
+            if (i < 4) {
+                ret[i] = df.getDistance(fourObjects[i], fourObjects[(i + 1) % 4]);
+            }
+            if (ret[i] == 0) {
+                return null;
+            }
+        }
+        if (enforceEFgeqBD && ret[4] * ret[5] < ret[1] * ret[3]) {
+            float b = ret[4];
+            float d = ret[5];
+            float e = ret[1];
+            float f = ret[3];
+            ret[1] = b;
+            ret[3] = d;
+            ret[4] = e;
+            ret[5] = f;
+        }
+        return ret;
+    }
+
+    public static <T> Map<Object, Float> evaluateDistsToPivots(T qData, Map<Object, T> pivotsMap, DistanceFunctionInterface<T> df) {
+        Map<Object, Float> ret = new HashMap<>();
+        for (Map.Entry<Object, T> entry : pivotsMap.entrySet()) {
+            float dist = df.getDistance(qData, entry.getValue());
+            ret.put(entry.getKey(), dist);
         }
         return ret;
     }

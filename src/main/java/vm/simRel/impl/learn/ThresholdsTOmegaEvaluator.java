@@ -5,8 +5,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vm.metricSpace.AbstractMetricSpace;
 import vm.metricSpace.Dataset;
-import vm.search.SearchingAlgorithm;
-import vm.search.impl.SimRelSeqScanKNNCandSet;
+import vm.search.algorithm.SearchingAlgorithm;
+import vm.search.algorithm.impl.SimRelSeqScanKNNCandSet;
 import vm.simRel.impl.learn.storeLearnt.SimRelEuclidThresholdsTOmegaStorage;
 
 /**

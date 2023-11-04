@@ -29,7 +29,7 @@ public class CosineDistance extends DistanceFunctionInterface<float[]> {
             o2Norm += o2[i] * o2[i];
         }
         float denominator = o1Norm * o2Norm;
-        return 1 - numerator / denominator;
+        return Math.max(0, 1 - numerator / denominator);
     }
 
     @Override

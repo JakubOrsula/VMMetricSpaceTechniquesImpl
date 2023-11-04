@@ -52,14 +52,16 @@ public class TransformDataToGHPSketches {
             int sketchesLength = sketchesLengths[i];
             List pivots = dataset.getPivots(pivotCount);
             sketchingTechnique = new SketchingGHP(dataset.getDistanceFunction(), dataset.getMetricSpace(), pivots, false);
-            String producedSketchesName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getDatasetName(), sketchesLength, balance);
+            String producedDatasetName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getDatasetName(), sketchesLength, balance);
+            String producedQuerySetName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getQuerySetName(), sketchesLength, balance);
+            String producedPivotsName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getPivotSetName(), sketchesLength, balance);
 
             if (sketchesPivotPairsNames[i] == null) {
-                sketchesPivotPairsNames[i] = producedSketchesName;
+                sketchesPivotPairsNames[i] = producedDatasetName;
             }
             sketchingTechnique.setPivotPairsFromStorage(storageOfPivotPairs, sketchesPivotPairsNames[i]);
 
-            MetricObjectsParallelTransformerImpl parallelTransformer = new MetricObjectsParallelTransformerImpl(sketchingTechnique, storageForSketches, producedSketchesName);
+            MetricObjectsParallelTransformerImpl parallelTransformer = new MetricObjectsParallelTransformerImpl(sketchingTechnique, storageForSketches, producedDatasetName, producedQuerySetName, producedPivotsName);
             Iterator pivotsIt = dataset.getPivots(-1).iterator();
             Iterator queriesIt = dataset.getMetricQueryObjects().iterator();
             Iterator dataIt = dataset.getMetricObjectsFromDataset();

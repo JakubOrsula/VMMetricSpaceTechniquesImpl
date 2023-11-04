@@ -33,4 +33,6 @@ public abstract class QueryExecutionStatsStoreInterface {
         }
     }
 
+    public abstract void save();
+
 }

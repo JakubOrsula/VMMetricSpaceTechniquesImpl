@@ -75,7 +75,7 @@ public class LearnSketchingGHP {
         }
         for (int sketchLength : sketchLengths) {
             LOG.log(Level.INFO, "\n\nStarting learning of sketches of length {0} bits.", new Object[]{sketchLength});
-            String resultName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getDatasetName(), true, sketchLength, balance);
+            String resultName = sketchingTechnique.getNameOfTransformedSetOfObjects(dataset.getDatasetName(), sketchLength, balance);
             int[] lowCorrelatedBits = selectLowCorrelatedBits(sketchLength, columnWiseSketches, sketchesCorrelations);
             sketchingTechnique.preserveJustGivenBits(lowCorrelatedBits);
             storage.storeSketching(resultName, metricSpace, Tools.arrayToList(sketchingTechnique.getPivots()), numberOfPivotsForMakingAllPairs, maxNumberOfBalancedForGeneticHeuristic);

@@ -3,7 +3,6 @@ package vm.metricSpace.distance.storedPrecomputedDistances;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  *
@@ -11,7 +10,6 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractPrecomputedDistancesMatrixLoader {
 
-    private final static Logger LOG = Logger.getLogger(AbstractPrecomputedDistancesMatrixLoader.class.getName());
     /*
     Mapping of object IDs to column indexes
      */

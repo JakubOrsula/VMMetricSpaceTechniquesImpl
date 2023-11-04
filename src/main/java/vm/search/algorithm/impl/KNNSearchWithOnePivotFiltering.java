@@ -1,4 +1,4 @@
-package vm.search.impl;
+package vm.search.algorithm.impl;
 
 import java.util.AbstractMap;
 import java.util.Iterator;
@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import vm.datatools.DataTypeConvertor;
 import vm.datatools.Tools;
 import vm.metricSpace.AbstractMetricSpace;
-import vm.search.SearchingAlgorithm;
+import vm.search.algorithm.SearchingAlgorithm;
 import vm.metricSpace.distance.DistanceFunctionInterface;
 import vm.metricSpace.distance.bounding.onepivot.OnePivotFilter;
 
@@ -113,8 +113,13 @@ public class KNNSearchWithOnePivotFiltering<T> extends SearchingAlgorithm<T> {
     }
 
     @Override
-    public List<Object> candSetKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object ... additionalParams) {
+    public List<Object> candSetKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object... additionalParams) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String getResultName() {
+        return filter.getTechFullName();
     }
 
 }

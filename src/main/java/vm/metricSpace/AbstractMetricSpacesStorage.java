@@ -2,7 +2,6 @@ package vm.metricSpace;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vm.datatools.Tools;
@@ -118,6 +117,7 @@ public abstract class AbstractMetricSpacesStorage {
      * set id, or pivot set id) - this info is stored with each object
      * @param additionalParamsToStoreWithNewDataset see the same param in the
      * method storeObjectToDataset
+     * @return 
      */
     public synchronized int storeObjectsToDataset(Iterator<Object> it, int count, String datasetName, Object... additionalParamsToStoreWithNewDataset) {
         int maxCount = count > 0 ? count : Integer.MAX_VALUE;

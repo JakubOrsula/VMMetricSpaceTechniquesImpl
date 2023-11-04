@@ -1,4 +1,4 @@
-package vm.search;
+package vm.search.algorithm;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vm.datatools.Tools;
 import vm.metricSpace.AbstractMetricSpace;
+import vm.metricSpace.Dataset;
 import vm.metricSpace.distance.DistanceFunctionInterface;
 
 /**
@@ -25,15 +26,30 @@ import vm.metricSpace.distance.DistanceFunctionInterface;
  */
 public abstract class SearchingAlgorithm<T> {
 
-    private final Logger LOG = Logger.getLogger(SearchingAlgorithm.class.getName());
-    public static final Integer BATCH_SIZE = 1000000;
+    private static final Logger LOG = Logger.getLogger(SearchingAlgorithm.class.getName());
+    public static final Integer BATCH_SIZE = 100000;
 
     protected final ConcurrentHashMap<Object, AtomicInteger> distCompsPerQueries = new ConcurrentHashMap();
     protected final ConcurrentHashMap<Object, AtomicLong> timesPerQueries = new ConcurrentHashMap();
 
-    public abstract TreeSet<Map.Entry<Object, Float>> completeKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object... additionalParams);
+    public abstract List<Object> candSetKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object... additionalParams);
 
-    public abstract List<Object> candSetKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object ... additionalParams);
+    /**
+     * Implicit implementation that just reranks the candidate set defined in
+     * this algorithm. Feel free to override with another complete search.
+     *
+     * @param metricSpace
+     * @param queryObject
+     * @param k
+     * @param objects
+     * @param additionalParams
+     * @return
+     */
+    public TreeSet<Map.Entry<Object, Float>> completeKnnSearch(AbstractMetricSpace<T> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object... additionalParams) {
+        List<Object> candSet = candSetKnnSearch(metricSpace, queryObject, k, objects, additionalParams);
+        Dataset dataset = (Dataset) additionalParams[0];
+        return rerankCandidateSet(metricSpace, queryObject, k, dataset.getDatasetName(), dataset.getKeyValueStorage(), candSet);
+    }
 
     public Map.Entry<Object, Float> adjustAndReturnLastEntry(TreeSet<Map.Entry<Object, Float>> currAnswer, int k) {
         int size = currAnswer.size();
@@ -94,7 +110,7 @@ public abstract class SearchingAlgorithm<T> {
      * @return evaluates all query objects in parallel. Parallelisation is done
      * over the query objects
      */
-    public TreeSet<Map.Entry<Object, Float>>[] completeKnnSearchOfQuerySet(AbstractMetricSpace<T> metricSpace, List<Object> queryObjects, int k, Iterator<Object> objects, Object... additionalParams) {
+    public TreeSet<Map.Entry<Object, Float>>[] completeKnnFilteringWithQuerySet(AbstractMetricSpace<T> metricSpace, List<Object> queryObjects, int k, Iterator<Object> objects, Object... additionalParams) {
         final TreeSet<Map.Entry<Object, Float>>[] ret = new TreeSet[queryObjects.size()];
         final List<Object> batch = new ArrayList<>();
         for (int i = 0; i < queryObjects.size(); i++) {
@@ -145,6 +161,38 @@ public abstract class SearchingAlgorithm<T> {
         return ret;
     }
 
+    /**
+     * @param metricSpace
+     * @param queryObjects
+     * @param k
+     * @param kCandSetMaxSize
+     * @param keyValueStorage
+     * @param additionalParams
+     * @return
+     */
+    public TreeSet<Map.Entry<Object, Float>>[] completeKnnSearchWithPartitioningForQuerySet(AbstractMetricSpace<T> metricSpace, List<Object> queryObjects, int k, int kCandSetMaxSize, Map<Object, T> keyValueStorage, Object... additionalParams) {
+        final TreeSet<Map.Entry<Object, Float>>[] ret = new TreeSet[queryObjects.size()];
+        ExecutorService threadPool = vm.javatools.Tools.initExecutor(vm.javatools.Tools.PARALELISATION);
+        try {
+            CountDownLatch latch = new CountDownLatch(queryObjects.size());
+            final AbstractMetricSpace<T> metricSpaceFinal = metricSpace;
+            for (int i = 0; i < queryObjects.size(); i++) {
+                final Object queryObject = queryObjects.get(i);
+                final int iFinal = i;
+                threadPool.execute(() -> {
+                    Object[] params = Tools.concatArrays(new Object[]{keyValueStorage, kCandSetMaxSize}, additionalParams);
+                    ret[iFinal] = completeKnnSearch(metricSpaceFinal, queryObject, k, null, params);
+                    latch.countDown();
+                });
+            }
+            latch.await();
+        } catch (InterruptedException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        threadPool.shutdown();
+        return ret;
+    }
+
     public void incTime(Object qId, long time) {
         AtomicLong ai = timesPerQueries.get(qId);
         if (ai != null) {
@@ -188,5 +236,11 @@ public abstract class SearchingAlgorithm<T> {
     public long getTimeOfQuery(Object qId) {
         return timesPerQueries.get(qId).get();
     }
+
+    public Map<Object, AtomicLong>[] getAddditionalStats() {
+        return null;
+    }
+
+    public abstract String getResultName();
 
 }

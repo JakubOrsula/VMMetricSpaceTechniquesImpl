@@ -19,17 +19,21 @@ import vm.metricSpace.MainMemoryDatasetCache;
  */
 public class MetricObjectsParallelTransformerImpl {
 
-    public static final Integer BATCH_SIZE = 5000000;
+    public static final Integer BATCH_SIZE = 1000000;
     private static final Logger LOG = Logger.getLogger(MetricObjectsParallelTransformerImpl.class.getName());
 
     private final MetricObjectTransformerInterface transformer;
     private final AbstractMetricSpacesStorage metricSpaceStorage;
-    private final String resultName;
+    private final String resultDatasetName;
+    private final String resultQuerysetName;
+    private final String resultPivotsName;
 
-    public MetricObjectsParallelTransformerImpl(MetricObjectTransformerInterface transformer, AbstractMetricSpacesStorage metricSpaceStorage, String resultName) {
+    public MetricObjectsParallelTransformerImpl(MetricObjectTransformerInterface transformer, AbstractMetricSpacesStorage metricSpaceStorage, String resultDatasetName, String resultQuerysetName, String resultPivotsName) {
         this.transformer = transformer;
         this.metricSpaceStorage = metricSpaceStorage;
-        this.resultName = resultName;
+        this.resultDatasetName = resultDatasetName;
+        this.resultQuerysetName = resultQuerysetName;
+        this.resultPivotsName = resultPivotsName;
     }
 
     public void processIteratorSequentially(Iterator<Object> iterator, OBJECT_TYPE objType, Object... additionalParamsToStoreWithNewDataset) {
@@ -88,7 +92,7 @@ public class MetricObjectsParallelTransformerImpl {
             }
             switch (objType) {
                 case DATASET_OBJECT: {
-                    metricSpaceStorage.storeObjectsToDataset(it, -1, resultName, additionalParamsToStoreWithNewDataset);
+                    metricSpaceStorage.storeObjectsToDataset(it, -1, resultDatasetName, additionalParamsToStoreWithNewDataset);
                     if (cache != null) {
                         cache.addAllDataObjects(transformedMetricObjects);
                     }
@@ -96,7 +100,7 @@ public class MetricObjectsParallelTransformerImpl {
                 }
                 case PIVOT_OBJECT: {
                     List<Object> pivots = Tools.getObjectsFromIterator(it);
-                    metricSpaceStorage.storePivots(pivots, resultName, additionalParamsToStoreWithNewDataset);
+                    metricSpaceStorage.storePivots(pivots, resultPivotsName, additionalParamsToStoreWithNewDataset);
                     if (cache != null) {
                         cache.addPivots(transformedMetricObjects);
                     }
@@ -104,7 +108,7 @@ public class MetricObjectsParallelTransformerImpl {
                 }
                 case QUERY_OBJECT: {
                     List<Object> queryObjects = Tools.getObjectsFromIterator(it);
-                    metricSpaceStorage.storeQueryObjects(queryObjects, resultName, additionalParamsToStoreWithNewDataset);
+                    metricSpaceStorage.storeQueryObjects(queryObjects, resultQuerysetName, additionalParamsToStoreWithNewDataset);
                     if (cache != null) {
                         cache.addQueries(transformedMetricObjects);
                     }

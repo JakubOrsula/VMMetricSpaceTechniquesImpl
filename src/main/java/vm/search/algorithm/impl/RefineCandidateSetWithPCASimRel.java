@@ -1,4 +1,4 @@
-package vm.search.impl;
+package vm.search.algorithm.impl;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import vm.metricSpace.ToolsMetricDomain;
 import vm.metricSpace.distance.DistanceFunctionInterface;
 import vm.objTransforms.perform.PCAMetricObjectTransformer;
 import vm.objTransforms.storeLearned.SVDStoreInterface;
-import vm.search.SearchingAlgorithm;
+import vm.search.algorithm.SearchingAlgorithm;
 import vm.simRel.impl.SimRelEuclideanPCAImpl;
 
 /**
@@ -188,7 +188,7 @@ public class RefineCandidateSetWithPCASimRel extends SearchingAlgorithm<float[]>
     }
 
     @Override
-    public List<Object> candSetKnnSearch(AbstractMetricSpace<float[]> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object ... additionalParams) {
+    public List<Object> candSetKnnSearch(AbstractMetricSpace<float[]> metricSpace, Object queryObject, int k, Iterator<Object> objects, Object... additionalParams) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -262,6 +262,11 @@ public class RefineCandidateSetWithPCASimRel extends SearchingAlgorithm<float[]>
         int ret = objectCheckedFromSet;
         objectCheckedFromSet = 0;
         return ret;
+    }
+
+    @Override
+    public String getResultName() {
+        return "RefineCandidateSetWithPCASimRel";
     }
 
 }

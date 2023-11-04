@@ -48,8 +48,7 @@ public class FourPointBasedFiltering extends TwoPivotsFilter {
      * @return Distance of O from the hyperplane
      */
     private double evaluateXFunc(float distOP1, float distOP2, float distP1P2) {
-        double ret = (distOP1 * distOP1 - distOP2 * distOP2) / (2 * distP1P2);
-        return ret;
+        return (distOP1 * distOP1 - distOP2 * distOP2) / (2 * distP1P2);
     }
 
     /**
@@ -58,8 +57,7 @@ public class FourPointBasedFiltering extends TwoPivotsFilter {
      */
     private double evaluateYFunc(double xO, float distOP1, float distP1P2) {
         double pom = xO + distP1P2 / 2;
-        double ret = Math.sqrt(distOP1 * distOP1 - pom * pom);
-        return ret;
+        return Math.sqrt(distOP1 * distOP1 - pom * pom);
     }
 
 }

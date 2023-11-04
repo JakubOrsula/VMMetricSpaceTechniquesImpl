@@ -15,4 +15,6 @@ public interface RecallOfCandsSetsStoreInterface {
      * of nearest neighbours etc.
      */
     public void storeRecallForQuery(Object queryObjId, float recall, Object... additionalParametersToStore);
+
+    public void save();
 }

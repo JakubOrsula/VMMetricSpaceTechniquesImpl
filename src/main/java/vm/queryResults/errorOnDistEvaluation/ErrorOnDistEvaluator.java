@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import vm.queryResults.QueryNearestNeighboursStoreInterface;
-import vm.queryResults.recallEvaluation.RecallOfCandsSetsEvaluator;
-import vm.queryResults.recallEvaluation.RecallOfCandsSetsStoreInterface;
 
 /**
  *
@@ -43,6 +41,9 @@ public class ErrorOnDistEvaluator {
     }
 
     private Float getKThDist(TreeSet<Map.Entry<Object, Float>> set, int k) {
+        if (set == null) {
+            return Float.MAX_VALUE;
+        }
         Iterator<Map.Entry<Object, Float>> it = set.iterator();
         for (int i = 0; i < k - 1 && it.hasNext(); i++) {
             it.next();

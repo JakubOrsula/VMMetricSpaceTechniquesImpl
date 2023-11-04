@@ -1,4 +1,4 @@
-package vm.metricSpace.voronoiPartitioning;
+package vm.metricSpace.datasetPartitioning;
 
 import java.util.Map;
 import java.util.SortedSet;
@@ -8,7 +8,7 @@ import java.util.TreeSet;
  *
  * @author Vlada
  */
-public interface StorageLearnedVoronoiPartitioningInterface {
+public interface StorageDatasetPartitionsInterface {
 
     public void store(Map<Object, SortedSet<Object>> mapping, String datasetName, int origPivotCount);
 

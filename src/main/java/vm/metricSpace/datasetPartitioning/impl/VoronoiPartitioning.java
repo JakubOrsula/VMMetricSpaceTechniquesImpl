@@ -1,6 +1,5 @@
-package vm.metricSpace.voronoiPartitioning;
+package vm.metricSpace.datasetPartitioning.impl;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,52 +13,55 @@ import java.util.logging.Logger;
 import vm.datatools.Tools;
 import vm.metricSpace.AbstractMetricSpace;
 import vm.metricSpace.ToolsMetricDomain;
+import vm.metricSpace.datasetPartitioning.AbstractDatasetPartitioning;
 import vm.metricSpace.distance.DistanceFunctionInterface;
 import vm.metricSpace.distance.impl.CosineDistance;
+import vm.metricSpace.datasetPartitioning.StorageDatasetPartitionsInterface;
 
 /**
  *
  * @author Vlada
  */
-public class VoronoiPartitioning {
+public class VoronoiPartitioning extends AbstractDatasetPartitioning {
 
-    public static final Integer BATCH_SIZE = 100000;
     public static final Logger LOG = Logger.getLogger(VoronoiPartitioning.class.getName());
 
-    private final AbstractMetricSpace metricSpace;
-    private final DistanceFunctionInterface df;
-    private final Map<Object, Object> pivots;
-    private final List<Object> pivotsList;
+    protected final DistanceFunctionInterface df;
+    protected final Map<Object, Object> pivots;
+    protected final List<Object> pivotsList;
 
     public VoronoiPartitioning(AbstractMetricSpace metricSpace, DistanceFunctionInterface df, List<Object> pivots) {
-        this.metricSpace = metricSpace;
+        super(metricSpace);
         this.df = df;
         this.pivots = ToolsMetricDomain.getMetricObjectsAsIdObjectMap(metricSpace, pivots, true);
         this.pivotsList = pivots;
     }
 
-    public Map<Object, SortedSet<Object>> splitByVoronoi(Iterator<Object> dataObjects, String datasetName, int pivotCountUsedInTheFileName, StorageLearnedVoronoiPartitioningInterface storage) {
+    @Override
+    public Map<Object, SortedSet<Object>> partitionObjects(Iterator<Object> dataObjects, String datasetName, StorageDatasetPartitionsInterface storage, Object... params) {
+        Integer pivotCountUsedInTheFileName = (Integer) params[0];
         Map<Object, SortedSet<Object>> ret = new HashMap<>();
         ExecutorService threadPool = vm.javatools.Tools.initExecutor(vm.javatools.Tools.PARALELISATION);
         int batchCounter = 0;
         long size = 0;
         Map<Object, Float> lengthOfPivotVectors = null;
         if (df instanceof CosineDistance) {
-            lengthOfPivotVectors = getVectorsLength(pivotsList, metricSpace);
+            lengthOfPivotVectors = ToolsMetricDomain.getVectorsLength(pivotsList, metricSpace);
         }
+
         while (dataObjects.hasNext()) {
             try {
                 CountDownLatch latch = new CountDownLatch(vm.javatools.Tools.PARALELISATION);
-                ProcessBatch[] processes = new ProcessBatch[vm.javatools.Tools.PARALELISATION];
+                AbstractDatasetPartitioning.BatchProcessor[] processes = new AbstractDatasetPartitioning.BatchProcessor[vm.javatools.Tools.PARALELISATION];
                 for (int j = 0; j < vm.javatools.Tools.PARALELISATION; j++) {
                     batchCounter++;
                     List batch = Tools.getObjectsFromIterator(dataObjects, BATCH_SIZE);
                     size += batch.size();
                     Map<Object, Float> lengthOfBatchVectors = null;
                     if (df instanceof CosineDistance) {
-                        lengthOfBatchVectors = getVectorsLength(batch, metricSpace);
+                        lengthOfBatchVectors = ToolsMetricDomain.getVectorsLength(batch, metricSpace);
                     }
-                    processes[j] = new ProcessBatch(batch, metricSpace, latch, lengthOfPivotVectors, lengthOfBatchVectors);
+                    processes[j] = getBatchProcesor(batch, metricSpace, latch, lengthOfPivotVectors, lengthOfBatchVectors);
                     threadPool.execute(processes[j]);
                 }
                 latch.await();
@@ -79,6 +81,7 @@ public class VoronoiPartitioning {
                 Logger.getLogger(VoronoiPartitioning.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
         threadPool.shutdown();
         if (storage != null) {
             storage.store(ret, datasetName, pivotCountUsedInTheFileName);
@@ -86,38 +89,14 @@ public class VoronoiPartitioning {
         return ret;
     }
 
-    private Map<Object, Float> getVectorsLength(List batch, AbstractMetricSpace metricSpace) {
-        Map<Object, Float> ret = new HashMap<>();
-        for (Object object : batch) {
-            Object id = metricSpace.getIDOfMetricObject(object);
-            float length = 0;
-            float[] vector = (float[]) metricSpace.getDataOfMetricObject(object); // must be the space of floats
-            for (int i = 0; i < vector.length; i++) {
-                float f = vector[i];
-                length += f * f;
-            }
-            ret.put(id, length);
-        }
-        return ret;
+    protected AbstractDatasetPartitioning.BatchProcessor getBatchProcesor(List batch, AbstractMetricSpace metricSpace, CountDownLatch latch, Map<Object, Float> pivotLengths, Map<Object, Float> objectsLengths) {
+        return new ProcessBatch(batch, metricSpace, latch, pivotLengths, objectsLengths);
     }
 
-    private class ProcessBatch implements Runnable {
-
-        private final List batch;
-        private final Map<Object, SortedSet<Object>> ret;
-        private final AbstractMetricSpace metricSpace;
-        private final Map<Object, Float> pivotLengths;
-        private final Map<Object, Float> objectsLengths;
-
-        private final CountDownLatch latch;
+    private class ProcessBatch extends AbstractDatasetPartitioning.BatchProcessor {
 
         public ProcessBatch(List batch, AbstractMetricSpace metricSpace, CountDownLatch latch, Map<Object, Float> pivotLengths, Map<Object, Float> objectsLengths) {
-            this.batch = batch;
-            this.ret = new HashMap<>();
-            this.metricSpace = metricSpace;
-            this.latch = latch;
-            this.pivotLengths = pivotLengths == null ? new HashMap<>() : pivotLengths;
-            this.objectsLengths = objectsLengths == null ? new HashMap<>() : objectsLengths;
+            super(batch, metricSpace, latch, pivotLengths, objectsLengths);
         }
 
         @Override
@@ -149,10 +128,5 @@ public class VoronoiPartitioning {
             t += System.currentTimeMillis();
             LOG.log(Level.INFO, "Batch finished in {0} ms", t);
         }
-
-        public Map<Object, SortedSet<Object>> getRet() {
-            return Collections.unmodifiableMap(ret);
-        }
-
     }
 }

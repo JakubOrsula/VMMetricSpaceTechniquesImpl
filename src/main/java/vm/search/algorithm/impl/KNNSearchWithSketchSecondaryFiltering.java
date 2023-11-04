@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package vm.search.impl;
+package vm.search.algorithm.impl;
 
 import java.util.AbstractMap;
 import java.util.Iterator;
@@ -18,7 +18,7 @@ import vm.metricSpace.Dataset;
 import vm.metricSpace.distance.DistanceFunctionInterface;
 import vm.metricSpace.distance.bounding.nopivot.impl.SecondaryFilteringWithSketches;
 import vm.objTransforms.objectToSketchTransformators.AbstractObjectToSketchTransformator;
-import vm.search.SearchingAlgorithm;
+import vm.search.algorithm.SearchingAlgorithm;
 
 /**
  *
@@ -95,8 +95,13 @@ public class KNNSearchWithSketchSecondaryFiltering<T> extends SearchingAlgorithm
     }
 
     @Override
-    public List candSetKnnSearch(AbstractMetricSpace hammingMetricSpace, Object skQ, int k, Iterator objects, Object ... additionalParams) {
+    public List candSetKnnSearch(AbstractMetricSpace hammingMetricSpace, Object skQ, int k, Iterator objects, Object... additionalParams) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public String getResultName() {
+        return filter.getTechFullName();
     }
 
 }
